@@ -70,7 +70,7 @@ public sealed class ContractStore
 
         var feedId = await UpsertFeedAsync(connection, transaction, spec, cancellationToken);
 
-        var latest = await connection.QuerySingleAsync<(int Version, string SpecHash)>(new CommandDefinition(@"
+        var latest = await connection.QuerySingleOrDefaultAsync<(int Version, string SpecHash)>(new CommandDefinition(@"
             SELECT TOP 1 Version, SpecHash
             FROM dbo.ContractVersion
             WHERE FeedId = @FeedId
