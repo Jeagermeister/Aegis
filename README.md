@@ -67,6 +67,9 @@ SQL Server · .NET background-worker collectors · S3 events (SQS) / MinIO for d
 
 ## Running it locally
 
+New here? Start with [docs/QUICKSTART.md](docs/QUICKSTART.md) — prerequisites,
+step-by-step install, verification, and troubleshooting.
+
 ```sh
 docker compose up -d                        # SQL Server (Agent on, sample jobs), MinIO, Airflow (sample DAGs)
 dotnet run --project src/Aegis.Migrations   # creates the Aegis database and applies the DbUp scripts
@@ -108,7 +111,8 @@ produced [docs/ROADMAP.md](docs/ROADMAP.md) — the start-to-finish work breakdo
 [docs/TECH-STACK.md](docs/TECH-STACK.md) — .NET 10/C# throughout (Blazor
 Server + SignalR UI, SQL Server, background-worker collectors), pure-.NET
 validator behind an interface, hybrid EF Core/Dapper with DbUp migrations,
-CSV/fixed-width feeds first with JSON fast-following.
+CSV/fixed-width feeds first with JSON fast-following. Getting up and running is
+covered in [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 **Implementation started (2026-09-02).** Task 1.1 (solution scaffold + CI +
 dev stack) is done: the solution is scaffolded across Api/Web/Collectors/
