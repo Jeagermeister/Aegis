@@ -18,6 +18,40 @@ hybrid Windows/MSSQL/AWS shops that mainstream observability tooling ignores.
 > *An aegis is the shield of Zeus and Athena — protection, held over everything
 > that runs.*
 
+## The 10,000-foot view
+
+AEGIS is the shield over everything that runs. It tells you **what's scheduled,
+what's failing, who owns it, and whether the data feeding it is any good** —
+*before* the business finds out the hard way.
+
+Your organization runs on hundreds or thousands of scheduled jobs across three
+schedulers. Today that means three UIs, three alert systems, and no shared
+picture: failures get noticed by customers instead of monitoring, bad data
+propagates silently downstream, and developers burn 20–30% of their time
+finding and diagnosing failures that are mostly missing files and schema drift,
+not code bugs.
+
+AEGIS fixes this with three capabilities:
+
+- **Visibility** — one read-only inventory, timeline, and dependency graph over
+  every scheduler, with ownership *harvested* from the job descriptions teams
+  already write (so it can't rot).
+- **Triage** — one alert per root cause, routed to the right owner, classified
+  by a small known taxonomy instead of a firehose of forty emails.
+- **Enforcement** — per-feed data contracts validated at the landing zone
+  *before* any pipeline runs, so a bad file is quarantined with a precise,
+  carrier-ready diff instead of poisoning downstream jobs.
+
+What that means for the business: reclaimed engineering time, an audit trail
+that generates itself (SOX evidence without the quarterly screenshot
+archaeology), and customer-facing risk replaced by proactive detection — all at
+zero license cost, riding the S3/SOX centralization you're already doing.
+
+Just as important is what AEGIS is **not**: it is read-only and metadata-only.
+It never schedules, triggers, or authors jobs, and file contents are inspected
+in place — PHI/PII never enters the system. That posture is what makes it safe
+to pilot and easy to sail through SOX change management.
+
 ## The problem
 
 Shops that grew up on SQL Server and Windows and later adopted Airflow end up with
@@ -60,6 +94,31 @@ UIs, three alerting systems, and no shared picture. The result is always the sam
   bindings; history survives migrations between schedulers.
 - **Monitor the monitor** — collector heartbeats and visible data staleness.
 
+## Architecture
+
+AEGIS is a .NET 10/C# system in three layers, all read-only against the systems
+it observes:
+
+- **Collectors** — stateless `BackgroundService` workers (one per source
+  system) that poll each scheduler on a 30–60s interval and normalize what they
+  see into the store. SQL Agent is read from `msdb`; Airflow/MWAA from its REST
+  API; VisualCron from its native .NET client API. Each collector emits
+  heartbeats and records per-sync row counts, so a collector that dies — or one
+  that is *alive but returning zero rows* — is itself a routed alert.
+- **Store** — SQL Server, the home turf of the Windows/MSSQL shops this
+  targets. Append-only run history plus current-state tables; contracts live in
+  git as YAML and sync to the DB as versioned rows. Identity is ULID-based and
+  explicit: a job migrating between schedulers is a deliberate, audited rebind,
+  never an auto-merge.
+- **API + UI** — a stateless ASP.NET Core minimal API, with a Blazor Server +
+  SignalR dashboard on top for live green/red views. The API stays a separate
+  layer from day one, so a Blazor WASM front end is an escape hatch, not a
+  rewrite.
+
+The contract layer is event-driven: S3 event notifications (SQS) trigger a
+validation worker that inspects each arriving file in place against its
+contract — metadata-only — and quarantines violations before any pipeline runs.
+
 ## Stack
 
 ASP.NET Core minimal API · Blazor Server + SignalR (live dashboards) ·
@@ -74,6 +133,7 @@ step-by-step install, verification, and troubleshooting.
 docker compose up -d                        # SQL Server (Agent on, sample jobs), MinIO, Airflow (sample DAGs)
 dotnet run --project src/Aegis.Migrations   # creates the Aegis database and applies the DbUp scripts
 dotnet run --project src/Aegis.Api          # hosts the collectors; Development settings point at the stack
+dotnet run --project src/Aegis.Validator    # syncs contracts/ YAML into versioned ContractVersion rows
 dotnet run --project src/Aegis.Generator    # drops a day of synthetic carrier feeds under generated_feeds/
 dotnet test                                 # unit tests, plus Testcontainers round-trips (needs Docker)
 ```
@@ -96,7 +156,8 @@ Solution layout: `Aegis.Api` (minimal API; hosts the collectors for now),
 `Aegis.Collectors` (SQL Agent and Airflow adapters over one shared persistence
 cycle), `Aegis.Generator` (synthetic feeds with injected violations and a manifest
 that says what was injected where), `Aegis.Migrations` (DbUp, plain SQL scripts),
-`Aegis.Validator` (Track B, not started), `Aegis.Web` (Blazor template, task 4.2),
+`Aegis.Validator` (Track B: contract YAML parsing + git→DB sync; the landing-zone
+validator engine is next), `Aegis.Web` (Blazor template, task 4.2),
 and `tests/` (xUnit; the integration project runs against real containers).
 
 ## Status
@@ -120,4 +181,10 @@ Validator/Migrations plus unit and integration test projects, the DbUp
 migration pipeline runs a baseline script, `docker-compose.yml` stands up the
 dev stack (SQL Server Dev with Agent, MinIO, Airflow), and GitHub Actions CI
 builds and tests on .NET 10. `dotnet build` and `dotnet test` are green
-locally. Next on the critical path is task 1.2 (core DDL).
+locally. Task 1.2 (core DDL) and 1.3 (monitor-the-monitor substrate) are done:
+the full schema applies via DbUp, round-trip tests cover identity/bindings/
+ownership/runs, and a stale-collector sweep raises `CollectorStale` when a
+source's heartbeat goes quiet. Task 2.1 (contract spec + versioning) is done:
+contracts are YAML, parsed and validated by `Aegis.Validator`, and synced to
+the store with `SpecHash`-deduplicated versioning. Next on the critical path is
+task 2.2 (arrival capture).

@@ -1,0 +1,55 @@
+feedId: CIGNA-ELIG
+owner: ETL
+landingPrefix: landing/cigna/eligibility/
+fileMask: CIGNA_ELIG_{yyyyMMdd}.csv
+arrivalWindow:
+  start: "03:00"
+  end: "07:00"
+schema:
+  name: Eligibility_v1
+  columns:
+    - name: MemberId
+      type: string
+      nullable: false
+      maxLength: 50
+    - name: FirstName
+      type: string
+      nullable: false
+      maxLength: 100
+    - name: LastName
+      type: string
+      nullable: false
+      maxLength: 100
+    - name: DOB
+      type: date
+      nullable: false
+    - name: Gender
+      type: string
+      nullable: false
+      maxLength: 1
+    - name: PlanCode
+      type: string
+      nullable: false
+      maxLength: 20
+    - name: EffectiveDate
+      type: date
+      nullable: false
+    - name: TermDate
+      type: date
+      nullable: true
+    - name: CarrierId
+      type: string
+      nullable: false
+      maxLength: 10
+    - name: GroupNumber
+      type: string
+      nullable: true
+      maxLength: 30
+    - name: SubscriberId
+      type: string
+      nullable: false
+      maxLength: 50
+    - name: Relationship
+      type: string
+      nullable: true
+      maxLength: 20

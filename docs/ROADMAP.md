@@ -25,15 +25,15 @@
 | Task | Size | Depends | DoD |
 |---|---|---|---|
 | 1.1 Solution scaffold + CI + dev stack | 2–3 | — | ✅ **DONE (2026-09-02)** — solution scaffolded (Api/Web/Collectors/Validator/Migrations + unit/integration tests), DbUp pipeline with baseline migration, `docker-compose.yml` (SQL Server Dev w/ Agent, MinIO, Airflow), GitHub Actions CI. `dotnet build` + `dotnet test` green locally. Remaining: verify `docker compose up` + Testcontainers once Docker group membership is active |
-| 1.2 Core DDL (promote DESIGN-v2 entity sketch) | 2–3 | 1.1 | Migrations for all tables apply cleanly; round-trip tests; append-only JobRun enforced |
-| 1.3 Monitor-the-monitor substrate | 2 | 1.2 | Heartbeats + CatalogSync stats; kill a collector in dev → alert; point collector at an empty source → alert ("healthy, 0 jobs" treated as contradiction) |
+| 1.2 Core DDL (promote DESIGN-v2 entity sketch) | 2–3 | 1.1 | ✅ **DONE (2026-09-03)** — migrations for all tables apply cleanly; round-trip tests; append-only JobRun enforced (closed runs never rewritten) |
+| 1.3 Monitor-the-monitor substrate | 2 | 1.2 | ✅ **DONE (2026-09-03)** — heartbeats + `CatalogSync` stats; zero-row and sharp-drop alerts; `StaleCollectorSweepService` raises `CollectorStale` when a source's heartbeat goes quiet and resolves it when it returns |
 | 1.4 Synthetic feed generator | 3–4 | 1.1 | ✅ **DONE (2026-09-03)** — `Aegis.Generator` CLI produces synthetic carrier feeds (CSV/fixed-width) with injected violations: late/missing files, mask drift, schema drift (renamed/added/removed columns), NULLs in NOT-NULL columns, data type mismatches, truncation, duplicates. Manifest JSON written. Triples as test suite + both demos. |
 
 ## Epic 2 — Contract layer (Track B v0→v1) → **M2**
 
 | Task | Size | Depends | DoD |
 |---|---|---|---|
-| 2.1 Contract spec + versioning | 2 | 1.2 | YAML schema for contracts (mask, arrival window, schema, nullability, owner); git→DB sync; SpecHash + EffectiveFrom |
+| 2.1 Contract spec + versioning | 2 | 1.2 | ✅ **DONE (2026-09-03)** — YAML contract schema (mask, arrival window, schema, nullability, owner); `ContractParser` + `ContractStore` git→DB sync; `SpecHash` + `EffectiveFrom`; unchanged specs don't create new versions; sample contracts under `contracts/` |
 | 2.2 Arrival capture | 1–2 | 2.1 | MinIO event → Arrival rows; disposition tracked |
 | 2.3 Validator worker | 3–4 | 2.1, 2.2 | In-place inspection, metadata-only; mask/schema/NULL checks; quarantine disposition; every Validation row pins its ContractVersionId |
 | 2.4 Proactive missing/late | 2 | 2.3 | Window-close sweep fires alert before pipeline would have run |

@@ -77,7 +77,17 @@ The API process hosts the SQL Agent and Airflow collectors (one box, per
 DESIGN-v2). Development settings point at the local stack. You should see
 collector log lines within ~30 seconds.
 
-## 5. Generate synthetic carrier feeds (optional)
+## 5. Sync contracts (optional)
+
+```sh
+dotnet run --project src/Aegis.Validator
+```
+
+Reads the contract YAML files under `contracts/`, validates them, and syncs
+them to the store as versioned `ContractVersion` rows (a new version is created
+only when a spec changes).
+
+## 6. Generate synthetic carrier feeds (optional)
 
 ```sh
 dotnet run --project src/Aegis.Generator
@@ -87,7 +97,7 @@ Drops a day of synthetic carrier feeds (CSV/fixed-width) with injected
 violations under `generated_feeds/{yyyyMMdd}/`, plus a `MANIFEST.json` that
 says what was injected where. Useful for exercising the contract layer.
 
-## 6. Run the tests
+## 7. Run the tests
 
 ```sh
 dotnet test

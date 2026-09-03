@@ -38,6 +38,9 @@ public static class AlertType
 
     /// <summary><c>sysjobhistory</c> was purged past the watermark; runs were lost at the source.</summary>
     public const string SqlAgentHistoryPurgeGap = "SqlAgentHistoryPurgeGap";
+
+    /// <summary>The source stopped heartbeating; the collector is dead or its store write path broke.</summary>
+    public const string CollectorStale = "CollectorStale";
 }
 
 /// <summary>Values written to <c>JobOwnership.ParsedFrom</c>: which field the owner was harvested from.</summary>

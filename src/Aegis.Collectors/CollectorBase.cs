@@ -44,6 +44,7 @@ public abstract class CollectorBase : ICollector
         StoreConnectionString = storeConnectionString;
         SourceSystemId = sourceSystemId;
         Logger = logger;
+        Alerts = new AlertStore(storeConnectionString, logger);
     }
 
     /// <summary>Connection to the AEGIS store. Never the monitored scheduler; subclasses hold their own source connection.</summary>
@@ -53,6 +54,9 @@ public abstract class CollectorBase : ICollector
     protected int SourceSystemId { get; }
 
     protected ILogger Logger { get; }
+
+    /// <summary>Shared alert writer; the sweep uses the same store so status semantics stay consistent.</summary>
+    protected AlertStore Alerts { get; }
 
     public abstract string SourceSystemType { get; }
 
@@ -489,28 +493,11 @@ public abstract class CollectorBase : ICollector
     /// <summary>
     /// Raises or re-fires an alert keyed on (type, source). Re-firing bumps <c>Occurrences</c>
     /// and <c>LastOccurrence</c>; nothing here resolves alerts, that is roadmap task 2.5.
-    /// The message is logged only: the <c>Alert</c> table has no text column yet.
     /// </summary>
-    protected async Task RaiseAlertAsync(string type, string message, CancellationToken cancellationToken)
+    protected Task RaiseAlertAsync(string type, string message, CancellationToken cancellationToken)
     {
-        Logger.LogWarning("Alert {AlertType} for {SourceSystemName}: {Message}", type, SourceSystemName, message);
-
         var dedupKey = ErrorFingerprint.DedupKey(type, SourceSystemId.ToString(System.Globalization.CultureInfo.InvariantCulture));
-
-        await using var connection = new SqlConnection(StoreConnectionString);
-        await connection.ExecuteAsync(Command(@"
-            MERGE dbo.Alert WITH (HOLDLOCK) AS target
-            USING (SELECT @DedupKey AS DedupKey) AS source
-                ON target.DedupKey = source.DedupKey
-            WHEN MATCHED THEN
-                UPDATE SET LastOccurrence = SYSUTCDATETIME(),
-                           Occurrences = target.Occurrences + 1,
-                           UpdatedAt = SYSUTCDATETIME()
-            WHEN NOT MATCHED THEN
-                INSERT (Type, DedupKey, Status, RoutedTo, FirstSeen, LastOccurrence, Occurrences, CreatedAt, UpdatedAt)
-                VALUES (@Type, @DedupKey, 'Firing', NULL, SYSUTCDATETIME(), SYSUTCDATETIME(), 1, SYSUTCDATETIME(), SYSUTCDATETIME());",
-            new { Type = type, DedupKey = dedupKey },
-            cancellationToken));
+        return Alerts.RaiseAsync(type, dedupKey, $"{SourceSystemName}: {message}", cancellationToken);
     }
 
     /// <summary>Dapper command with cancellation wired through; every store call goes through here.</summary>

@@ -1,0 +1,53 @@
+feedId: AETNA-CLAIMS
+owner: ETL
+landingPrefix: landing/aetna/claims/
+fileMask: AETNA_CLAIMS_{yyyyMMdd}.txt
+arrivalWindow:
+  start: "02:00"
+  end: "06:00"
+schema:
+  name: Claims_v1
+  columns:
+    - name: ClaimId
+      type: string
+      nullable: false
+      maxLength: 50
+    - name: MemberId
+      type: string
+      nullable: false
+      maxLength: 50
+    - name: ServiceDate
+      type: date
+      nullable: false
+    - name: ProviderNPI
+      type: string
+      nullable: false
+      maxLength: 10
+    - name: ProcedureCode
+      type: string
+      nullable: false
+      maxLength: 10
+    - name: DiagnosisCode
+      type: string
+      nullable: false
+      maxLength: 10
+    - name: BilledAmount
+      type: decimal
+      nullable: false
+    - name: AllowedAmount
+      type: decimal
+      nullable: true
+    - name: PaidAmount
+      type: decimal
+      nullable: true
+    - name: CarrierId
+      type: string
+      nullable: false
+      maxLength: 10
+    - name: ClaimStatus
+      type: string
+      nullable: false
+      maxLength: 20
+    - name: ProcessedDate
+      type: date
+      nullable: true

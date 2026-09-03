@@ -11,6 +11,12 @@ public sealed class CollectorOptions
     /// <summary>Seconds between polls. Each collector is independently timed, so a slow source never delays the others.</summary>
     public int PollIntervalSeconds { get; set; } = 60;
 
+    /// <summary>
+    /// A source whose heartbeat is older than this is stale. Defaults to twice the poll interval
+    /// when not set, so a single missed poll never fires the alert.
+    /// </summary>
+    public int StaleAfterSeconds { get; set; } = 0;
+
     public List<SqlAgentCollectorOptions> SqlAgentCollectors { get; set; } = [];
 
     public List<AirflowCollectorOptions> AirflowCollectors { get; set; } = [];

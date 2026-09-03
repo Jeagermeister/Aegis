@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpClient();
         services.AddHostedService<CollectorHostedService>();
+        services.AddHostedService<StaleCollectorSweepService>();
 
         return services;
     }
