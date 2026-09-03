@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aegis.Api/Aegis.Api.csproj" />
+    <Project Path="src/Aegis.Collectors/Aegis.Collectors.csproj" />
+    <Project Path="src/Aegis.Generator/Aegis.Generator.csproj" />
+    <Project Path="src/Aegis.Migrations/Aegis.Migrations.csproj" />
+    <Project Path="src/Aegis.Validator/Aegis.Validator.csproj" />
+    <Project Path="src/Aegis.Web/Aegis.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Aegis.IntegrationTests/Aegis.IntegrationTests.csproj" />
+    <Project Path="tests/Aegis.Tests/Aegis.Tests.csproj" />
+  </Folder>
+</Solution>

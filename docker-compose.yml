@@ -1,0 +1,87 @@
+name: aegis
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: aegis-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Aegis!Dev2026"
+      MSSQL_PID: "Developer"
+      # The image ships with Agent off. The SQL Agent collector reads msdb, so it has to be on.
+      MSSQL_AGENT_ENABLED: "true"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Aegis!Dev2026' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # One-shot. Creates the sample Agent jobs and sets history retention hostile on purpose
+  # (DESIGN-v2 collector spec), so the watermark-gap path can be exercised locally. Idempotent.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: aegis-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./docker/sqlserver:/init:ro
+    entrypoint: ["/opt/mssql-tools18/bin/sqlcmd", "-S", "sqlserver", "-U", "sa", "-P", "Aegis!Dev2026", "-C", "-b", "-i", "/init/init.sql"]
+    restart: "no"
+
+  minio:
+    image: minio/minio:latest
+    container_name: aegis-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: aegis
+      MINIO_ROOT_PASSWORD: aegis-dev-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Scheduler and webserver in one container, on SQLite. SQLite only works with the
+  # SequentialExecutor (one task at a time), which is plenty for the sample DAGs.
+  # basic_auth is what lets the collector call the REST API; the default (session only) answers 401.
+  airflow:
+    image: apache/airflow:2.10.5
+    container_name: aegis-airflow
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: "15"
+      AIRFLOW__WEBSERVER__WARN_DEPLOYMENT_EXPOSURE: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --firstname Aegis --lastname Admin --role Admin --email admin@aegis.local --password admin &&
+               (airflow scheduler &) &&
+               exec airflow webserver"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  sqlserver-data:
+  minio-data:

@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# IDE
+.idea/
+.vscode/
+
+# Local dev
+*.local.json
+.env
+docker/data/
+
+# Generated artifacts
+generated_feeds/
+nupkg/
