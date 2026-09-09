@@ -46,7 +46,7 @@ public sealed class AlertStore
             cancellationToken: cancellationToken));
     }
 
-    /// <summary>Marks a firing alert resolved. A no-op when it is not firing, so a healthy source never resurrects history.</summary>
+    /// <summary>Marks a firing alert resolved. A no-op when it is not firing, so a healthy source does not reopen old alerts.</summary>
     public async Task ResolveAsync(string dedupKey, CancellationToken cancellationToken)
     {
         await using var connection = new SqlConnection(_storeConnectionString);

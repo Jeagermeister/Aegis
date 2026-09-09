@@ -26,7 +26,7 @@ public sealed class AirflowCollector : CollectorBase
     /// <summary>Airflow's default <c>maximum_page_limit</c>. Asking for more is silently clamped, so ask for exactly this.</summary>
     private const int PageSize = 100;
 
-    /// <summary>Airflow's default owner when a DAG declares none. Treated as unowned so the gap list stays honest.</summary>
+    /// <summary>Airflow's default owner when a DAG declares none. Treated as unowned so it lands on the gap list.</summary>
     private const string DefaultOwner = "airflow";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)

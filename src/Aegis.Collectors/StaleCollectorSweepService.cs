@@ -10,7 +10,7 @@ namespace Aegis.Collectors;
 /// "Monitor the monitor" (design principle 5): a collector that dies silently is a blind spot, so
 /// a separate sweep watches every <c>SourceSystem</c> heartbeat and raises a
 /// <c>CollectorStale</c> alert when one goes quiet, then resolves it when the heartbeat returns.
-/// The sweep is deliberately a different process path from the collectors it watches — a crash in
+/// The sweep is deliberately a different process path from the collectors it watches, so a crash in
 /// the collector host must not take the watcher down with it.
 /// </summary>
 public sealed class StaleCollectorSweepService : BackgroundService

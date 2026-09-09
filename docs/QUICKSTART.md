@@ -1,4 +1,4 @@
-# QUICKSTART — install & run AEGIS locally
+# QUICKSTART - install & run AEGIS locally
 
 > Companion to [README](../README.md), [DESIGN-v2.md](DESIGN-v2.md),
 > [ROADMAP.md](ROADMAP.md), and [TECH-STACK.md](TECH-STACK.md). This page gets
@@ -39,7 +39,7 @@ docker compose up -d
 
 This stands up:
 
-- **SQL Server 2022** (Developer, Agent enabled) with four sample Agent jobs —
+- **SQL Server 2022** (Developer, Agent enabled) with four sample Agent jobs -
   one succeeds every minute, one fails every minute on a missing vendor file,
   one two-step job fails on its second step, and one purges history older than
   20 minutes to simulate hostile retention.
@@ -47,7 +47,7 @@ This stands up:
 - **Airflow** with three sample DAGs (succeeding, failing, paused).
 
 The `sqlserver-init` one-shot container creates the sample jobs and is
-idempotent — safe to re-run.
+idempotent - safe to re-run.
 
 Verify everything is healthy:
 
@@ -56,7 +56,7 @@ docker compose ps
 ```
 
 Wait for the `sqlserver` and `airflow` healthchecks to report `healthy`
-(30–90s on first pull).
+(30 to 90 seconds on first pull).
 
 ## 3. Create the Aegis database
 
@@ -65,7 +65,7 @@ dotnet run --project src/Aegis.Migrations
 ```
 
 This creates the `Aegis` database and applies the DbUp migration scripts.
-Re-running is safe — DbUp tracks applied scripts.
+Re-running is safe - DbUp tracks applied scripts.
 
 ## 4. Start the API (hosts the collectors)
 
@@ -75,7 +75,7 @@ dotnet run --project src/Aegis.Api
 
 The API process hosts the SQL Agent and Airflow collectors (one box, per
 DESIGN-v2). Development settings point at the local stack. You should see
-collector log lines within ~30 seconds.
+collector log lines within about 30 seconds.
 
 ## 5. Sync contracts (optional)
 
@@ -140,19 +140,19 @@ docker compose down -v      # also delete the SQL/MinIO data volumes
 ## Troubleshooting
 
 **`docker compose up` fails on SQL Server memory.** The SQL Server container
-needs ~2 GB RAM. On Docker Desktop, raise the memory limit in Settings →
+needs about 2 GB RAM. On Docker Desktop, raise the memory limit in Settings >
 Resources. On Linux, ensure the container has enough memory available.
 
 **Airflow is slow to come up.** The container runs `airflow db migrate`,
 creates the admin user, and starts the scheduler before the webserver. Give it
-up to 90s; `docker compose ps` will show `healthy` when ready.
+up to 90 seconds; `docker compose ps` will show `healthy` when ready.
 
 **Migrations fail with a connection error.** SQL Server may still be starting.
 Wait for `docker compose ps` to show `sqlserver` healthy, then re-run step 3.
 
 **Collectors log errors against `local-sqlserver`.** The SQL Agent collector
-reads `msdb`; if the sample jobs were not created (e.g. the init container
-failed), check `docker compose logs sqlserver-init`.
+reads `msdb`; if the sample jobs were not created (for example the init
+container failed), check `docker compose logs sqlserver-init`.
 
 **Ports already in use.** The stack binds 1433, 8080, 9000, 9001. Stop
 whatever is on those ports, or edit the `ports:` mappings in

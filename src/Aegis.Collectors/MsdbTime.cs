@@ -12,7 +12,7 @@ internal static class MsdbTime
     /// <summary>
     /// Converts a packed local date/time pair to UTC. Returns null for the "never ran" sentinel
     /// (<c>run_date</c> = 0). A local time that falls inside a DST gap resolves with the zone's
-    /// standard offset rather than throwing; being an hour out beats losing the run.
+    /// standard offset rather than throwing; an hour off is better than losing the run.
     /// </summary>
     public static DateTimeOffset? ToUtc(int packedDate, int packedTime, TimeZoneInfo sourceZone)
     {

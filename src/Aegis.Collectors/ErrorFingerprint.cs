@@ -7,7 +7,7 @@ namespace Aegis.Collectors;
 /// <summary>
 /// Sentry-style grouping: strip the parts of an error message that vary from run to run
 /// (timestamps, ids, numbers, quoted values), keep its shape, hash the shape. Two failures with
-/// the same fingerprint are the same problem and should be one alert, not forty emails.
+/// the same fingerprint are the same problem and should be one alert.
 /// </summary>
 internal static partial class ErrorFingerprint
 {

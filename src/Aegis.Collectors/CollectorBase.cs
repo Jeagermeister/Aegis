@@ -66,7 +66,7 @@ public abstract class CollectorBase : ICollector
     /// Reads the source. <paramref name="watermark"/> is what the previous successful cycle returned
     /// in <see cref="CollectedBatch.Watermark"/>, or null on the first poll ever; only the
     /// implementation knows what it means. Throw for anything that should mark the sync as failed:
-    /// an empty result must be an honest empty result, never a swallowed error.
+    /// an empty result must be a real empty result, not a swallowed error.
     /// </summary>
     protected abstract Task<CollectedBatch> CollectDataAsync(string? watermark, CancellationToken cancellationToken);
 
