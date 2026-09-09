@@ -10,9 +10,8 @@ namespace Aegis.Collectors;
 /// <summary>
 /// Hosts every configured collector, each on its own <see cref="PeriodicTimer"/>, in one process
 /// (TECH-STACK: plain <c>BackgroundService</c>, no job-queue framework). Startup registers each
-/// source in <c>SourceSystem</c> and waits for the store if it is not up yet; a misconfigured
-/// source, by contrast, fails the host immediately, because a typo that idles quietly is the
-/// blind spot the whole design is built to avoid.
+/// source in <c>SourceSystem</c> and waits for the store if it is not up yet. A misconfigured
+/// source fails the host immediately, so a config typo cannot idle quietly.
 /// </summary>
 public sealed class CollectorHostedService : BackgroundService
 {
